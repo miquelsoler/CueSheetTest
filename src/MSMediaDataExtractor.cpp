@@ -45,60 +45,96 @@ void MSMediaDataExtractor::setup(string _cueFilename, string _cuePath, string _i
     cueBuffer = ofBufferFromFile(cuePath + "/" + cueFilename);
 
     isanFilenames = {
-        "ISANDB_Export_SE_01.xml", "ISANDB_Export_SE_02.xml",
-        "ISANDB_Export_SE_03.xml", "ISANDB_Export_SE_04.xml",
-        "ISANDB_Export_SE_05.xml", "ISANDB_Export_SE_06.xml",
-        "ISANDB_Export_SE_07.xml", "ISANDB_Export_SE_08.xml",
-        "ISANDB_Export_SH_01.xml", "ISANDB_Export_SW_01.xml",
-        "ISANDB_Export_SW_02.xml", "ISANDB_Export_SW_03.xml"
+//        "test.xml",
+        "ISANDB_Export_SW_03.xml",
+//        "ISANDB_Export_SE_01.xml", "ISANDB_Export_SE_02.xml",
+//        "ISANDB_Export_SE_03.xml", "ISANDB_Export_SE_04.xml",
+//        "ISANDB_Export_SE_05.xml", "ISANDB_Export_SE_06.xml",
+//        "ISANDB_Export_SE_07.xml", "ISANDB_Export_SE_08.xml",
+//        "ISANDB_Export_SH_01.xml", "ISANDB_Export_SW_01.xml",
+//        "ISANDB_Export_SW_02.xml"
     };
 }
 
 void MSMediaDataExtractor::threadedFunction()
 {
-    ofBuffer::Lines lines = cueBuffer.getLines();
-    ofBuffer::Line itLines = lines.begin();
+    status = MSMediaDataStatusProcessing;
 
-    // Count total number of lines in cue file
+    for (int i=0; i<isanFilenames.size(); ++i)
     {
-        numCueLines = 0;
-        for (; itLines != lines.end(); ++itLines) numCueLines++;
-    }
+        cout << "Processing <" << isanFilenames[i] << ">" << endl;
 
-    // Process cue file line by line
-    {
-        status = MSMediaDataStatusProcessing;
-        for (itLines = lines.begin(); itLines != lines.end(); ++itLines)
+        ofxXmlSettings isanXml;
+        float elapsed = ofGetElapsedTimef();
+        isanXml.loadFile(isanPath + "/" + isanFilenames[i]);
+        elapsed = ofGetElapsedTimef() - elapsed;
+        cout << "Took " << elapsed << " seconds to load." << endl;
+
+        elapsed = ofGetElapsedTimef();
+        isanXml.pushTag(XML_WORKCATALOGUE);
+        isanXml.pushTag(XML_WORKLIST);
+        int numWorks = isanXml.getNumTags(XML_WORK);
+
+        cout << "Num works: " << numWorks << endl;
+        for (int j=0; j<numWorks; ++j)
         {
-            string strLine = itLines.asString();
-            if ((strLine.size() != 0) && (currentCueLine != 0)) // Skip header and empty lines
-                parseCueLine(strLine);
+            isanXml.pushTag(XML_WORK, j);
+            {
+                MSIsanItem isanItem;
 
-            currentCueLine++;
+                string root = isanXml.getAttribute(XML_ISAN, "root", "");
+                string episode = isanXml.getAttribute(XML_ISAN, "episodeOrPart", "");
+                string check1 = isanXml.getAttribute(XML_ISAN, "check1", "");
+                string version = isanXml.getAttribute(XML_ISAN, "version", "");
+                string check2 = isanXml.getAttribute(XML_ISAN, "check2", "");
+
+                isanItem.ID = root + "-" + episode + "-" + check1 + "-" + version + "-" + check2;
+
+                isanXml.pushTag("TitleList");
+                {
+                    int numTitles = isanXml.getNumTags("title:TitleDetail");
+                    for (int k=0; k<numTitles; ++k)
+                    {
+                        isanXml.pushTag("title:TitleDetail", k);
+                        isanItem.titles.push_back(isanXml.getValue("title:Title", ""));
+                        isanXml.popTag();
+                    }
+                }
+                isanXml.popTag();
+
+                isanItem.print();
+                isanItems.push_back(isanItem);
+                
+            }
+            isanXml.popTag();
+
+            // Aqu’ Žs on agafo isanItems, i he de fer match amb cue i EPG.
+            // I quan acabi, fer net d'isanItems (isanItems.clear()) i passar al segŸent
         }
 
-        status = MSMediaDataStatusDone;
+        elapsed = ofGetElapsedTimef() - elapsed;
+        cout << "Took " << elapsed << " seconds to parse." << endl;
     }
 }
 
 string MSMediaDataExtractor::getStatusString()
 {
-    string result;
-    switch(status) {
-        case MSMediaDataStatusProcessing: result = "Processing " + to_string(currentCueLine) + " of " + to_string(numCueLines) + " cue sheet tracks..."; break;
-        case MSMediaDataStatusDone: result = "Done!"; break;
-    }
+    string result = "";
+//    switch(status) {
+//        case MSMediaDataStatusProcessing: result = "Processing " + to_string(currentCueLine) + " of " + to_string(numCueLines) + " cue sheet tracks..."; break;
+//        case MSMediaDataStatusDone: result = "Done!"; break;
+//    }
 
     return result;
 }
 
 float MSMediaDataExtractor::getProcessPercent()
 {
-    float result;
-    switch (status) {
-        case MSMediaDataStatusProcessing: result = (static_cast<float>(currentCueLine) / static_cast<float>(numCueLines)) * 100; break;
-        case MSMediaDataStatusDone: result = 100.0; break;
-    }
+    float result = 25.0;
+//    switch (status) {
+//        case MSMediaDataStatusProcessing: result = (static_cast<float>(currentCueLine) / static_cast<float>(numCueLines)) * 100; break;
+//        case MSMediaDataStatusDone: result = 100.0; break;
+//    }
 
     return result;
 }

@@ -13,6 +13,8 @@
 #include "ofThread.h"
 #include "ofFileUtils.h"
 
+#include "MSIsanItem.hpp"
+
 typedef enum
 {
     MSMediaDataStatusProcessing = 0,
@@ -31,6 +33,8 @@ public:
 private:
 
     MSMediaDataStatus status;
+
+    vector<MSIsanItem> isanItems;
 
     void parseCueLine(string line);
     string findIsanCodeForTitle(string cueTitle);
