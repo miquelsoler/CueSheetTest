@@ -13,17 +13,14 @@
 #include "ofThread.h"
 #include "ofFileUtils.h"
 
-class MSMediaDataExtractor : public ofThread
-{
-
 typedef enum
 {
-    MSMediaDataStatusCounting = 0,
-    MSMediaDataStatusProcessing = 1,
-    MSMediaDataStatusDone = 2
+    MSMediaDataStatusProcessing = 0,
+    MSMediaDataStatusDone = 1
 } MSMediaDataStatus;
 
-
+class MSMediaDataExtractor : public ofThread
+{
 public:
 
     void setup(string cueFilename, string cuePath, string isanPath, string epgPath);
@@ -36,16 +33,18 @@ private:
     MSMediaDataStatus status;
 
     void parseCueLine(string line);
+    string findIsanCodeForTitle(string cueTitle);
 
     string cuePath;
     string cueFilename;
     string isanPath;
     string epgPath;
 
+    vector<string> isanFilenames;
+
     ofBuffer cueBuffer;
     unsigned int numCueLines;
     unsigned int currentCueLine = 0;
-    vector<string> isanFilenames;
 
     string statusString;
     float processPercent;
