@@ -13,6 +13,7 @@
 #include "ofThread.h"
 #include "ofFileUtils.h"
 
+#include "MSCueItem.hpp"
 #include "MSIsanItem.hpp"
 
 typedef enum
@@ -34,10 +35,12 @@ private:
 
     MSMediaDataStatus status;
 
+    vector<MSCueItem> cueItems;
     vector<MSIsanItem> isanItems;
 
-    void parseCueLine(string line);
-    string findIsanCodeForTitle(string cueTitle);
+    void buildCueCache();
+    void buildIsanCacheForFile(string isanFilename);
+    void findCueIdsForIsanFile();
 
     string cuePath;
     string cueFilename;
@@ -45,10 +48,6 @@ private:
     string epgPath;
 
     vector<string> isanFilenames;
-
-    ofBuffer cueBuffer;
-    unsigned int numCueLines;
-    unsigned int currentCueLine = 0;
 
     string statusString;
     float processPercent;

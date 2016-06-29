@@ -6,6 +6,8 @@ static const int PERCENT_HEIGHT = 20;
 void ofApp::setup()
 {
     ofBackground(ofColor::white);
+    ofSetFrameRate(10);
+
     mediaDataExtractor.setup("umpgworks.table.csv", "cuesheet", "isan", "epg");
     mediaDataExtractor.startThread();
 }
@@ -43,8 +45,15 @@ void ofApp::draw()
         ofDrawRectangle(pctX, pctY, pctWidth, PERCENT_HEIGHT);
 
         ofSetColor(ofColor::black);
-        string pctMessage = ofToString(int(processPercent)) + "%";
+        string pctMessage = ofToString(processPercent) + "%";
         ofDrawBitmapString(pctMessage, (ofGetWidth()/2) - 1 - (pctMessage.length() - 1) * 8/2, pctY + 14);
     }
     ofPopStyle();
 }
+
+void ofApp::exit()
+{
+    cout << "Called exit" << endl;
+    mediaDataExtractor.stopThread();
+}
+
